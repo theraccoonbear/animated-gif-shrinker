@@ -6,7 +6,7 @@ package App::animate_gif_shrinker;
 use strict;
 use warnings;
 use Getopt::Long;
-use Data::Printer;
+#use Data::Printer;
 
 my $input_file;
 my $output_file;
