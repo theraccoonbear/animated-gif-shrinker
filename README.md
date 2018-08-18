@@ -11,16 +11,16 @@ usage: ags [-i <input>] [-o <output>]
     --input        path to .gif for processing
     -i             
 
-    --output       path to out new gif (default: <input>_output.gif)
+    --output       path to output new gif (default: <input>_output.gif)
     -o             
 
-    --use-every    use every nth frame
+    --use-every    use every _n_th frame
     -u             
 
     --width        new width for image (default: input width)
     -w             
 
-    --height       new height for image (default: scale based on --width)
+    --height       new height for image (default: scaled based on --width)
     -h             
 
     --fps          set the output frame rate

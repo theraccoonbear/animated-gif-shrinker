@@ -30,13 +30,13 @@ my @opts = (
 
 my $help = {
 	input => 'path to .gif for processing',
-	output => 'path to out new gif (default: <input>_output.gif)',
+	output => 'path to output new gif (default: <input>_output.gif)',
 	from => 'first frame to use',
 	to => 'last frame to use',
-	'use-every' => 'use every nth frame',
+	'use-every' => 'use every _n_th frame',
 	fps => 'set the output frame rate',
 	width => 'new width for image (default: input width)',
-	height => 'new height for image (default: scale based on --width)',
+	height => 'new height for image (default: scaled based on --width)',
 };
 
 
