@@ -1,0 +1,228 @@
+#!/usr/bin/env perl
+package App::animate_gif_shrinker;
+
+# Animated GIF Shrinker
+
+use strict;
+use warnings;
+use Getopt::Long;
+use Data::Printer;
+
+my $input_file;
+my $output_file;
+my $use_every = 2;
+my $new_width;
+my $new_height;
+my $from_frame;
+my $to_frame;
+my $fps = 10;
+
+my @opts = (
+	'input|i=s' => \$input_file,
+	'output|o=s' => \$output_file,
+	'use-every|u=i' => \$use_every,
+	'width|w=i' => \$new_width,
+	'height|h=i' => \$new_height,
+	'fps|f=i' => \$fps,
+	'from=i' => \$from_frame,
+	'to=i' => \$to_frame,
+);
+
+my $help = {
+	input => 'path to .gif for processing',
+	output => 'path to out new gif (default: <input>_output.gif)',
+	from => 'first frame to use',
+	to => 'last frame to use',
+	'use-every' => 'use every nth frame',
+	fps => 'set the output frame rate',
+	width => 'new width for image (default: input width)',
+	height => 'new height for image (default: scale based on --width)',
+};
+
+
+sub show_usage {
+	my ($msg, $exit_code) = @_;
+	say STDERR "usage: ags [-i <input>] [-o <output>]";
+	my $idx = 0;
+	foreach my $k ( @opts) {
+		if (++$idx % 2 == 0) { next; }
+		my ($flags, $type) = split(/=/, $k);
+		my @all_flags = split(/\|/, $flags);
+		my $cnt = 0;
+		foreach my $f (@all_flags) {
+			$cnt++;
+			my $disp_f = sprintf('%-15s', length($f) > 1 ? "--$f" : "-$f");
+			print STDERR "    $disp_f";
+			if ($cnt == 1 && defined $help->{$f}) {
+				print STDERR $help->{$f};
+			}
+			print STDERR "\n";
+		}
+		print STDERR "\n";
+	}
+
+    if ($exit_code) { 
+		print STDERR $msg . "\n";
+		exit $exit_code;
+	}
+
+}
+
+sub file_stat {
+	my ($filename) = @_;
+	my ($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size, $atime,$mtime,$ctime,$blksize,$blocks) = stat($filename);
+
+	say STDERR " * Getting stats for $filename";
+
+	my $info = {
+		dev => $dev,
+		ino => $ino,
+		mode => $mode,
+		nlink => $nlink,
+		uid => $uid,
+		gid => $gid,
+		rdev => $rdev,
+		size => $size,
+		atime => $atime,
+		mtime => $mtime,
+		ctime => $ctime,
+		blksize => $blksize,
+		blocks => $blocks
+	};
+
+	if ($filename =~ m/\.(jpe?g|gif|png)$/xism) {
+		my $ident_cmd = "identify $filename";
+		my $result = `$ident_cmd 2>&1`;
+		if ($result =~ m/(?<width>\d+)x(?<height>\d+)/xsm) {
+			$info->{width} = $+{width};
+			$info->{height} = $+{height};
+		}
+		$info->{frames} = () = $result =~ /\[\d+\]/gi;
+	}
+
+	return $info;
+}
+
+sub format_bytes {
+	my ($bytes) = @_;
+	if ($bytes >= 1_000_000_000_000) { return sprintf('%.01f', $bytes / 1_000_000_000_000) . 'TB'; }
+	elsif ($bytes >= 1_000_000_000) { return sprintf('%.01f', $bytes / 1_000_000_000) . 'GB'; }
+	elsif ($bytes >= 1_000_000) { return sprintf('%.01f', $bytes / 1_000_000) . 'MB'; }
+	elsif ($bytes >= 1_000) { return sprintf('%.01f', $bytes / 1_000) . 'KB'; }
+	else { return $bytes . 'B'; }
+}
+
+GetOptions (@opts);
+
+if (! defined $input_file) {
+	show_usage "ERROR: Please specify an --input file for processing", 1;
+}
+
+if (! -f $input_file) {
+	show_usage "ERROR: Can't find \"$input_file\" for processing", 1;
+}
+
+if (!$output_file) {
+	($output_file = $input_file) =~ s/\.gif/_output.gif/xsm;
+}
+
+my $inp_stat = file_stat($input_file);
+
+my $frame_split_command = "convert \"$input_file\" +adjoin temp_%04d.gif 2>&1";
+say STDERR " * Extracting frames...";
+`$frame_split_command`;
+
+if (! defined $from_frame) { $from_frame = 1; }
+if (! defined $to_frame) { $from_frame = $inp_stat->{frames}; }
+
+if ($to_frame < $from_frame) {
+	show_usage "ERROR: --from cannot be after --to", 1;
+}
+
+if ($from_frame > $inp_stat->{frames} || $to_frame > $inp_stat->{frames}) {
+	show_usage "ERROR: --from and --to must be in the range of 1 to " . $inp_stat->{frames}, 1;
+}
+
+if ($from_frame != 1 || $to_frame != $inp_stat->{frames}) {
+	say STDERR " * Then grabbing frames $from_frame to $to_frame of input's 1 to " . $inp_stat->{frames} . "...";
+}
+
+if ($use_every != 1) {
+	say STDERR " * Then using every $use_every" . (
+		$use_every =~ /2$/xsm ? 'nd' : (
+			$use_every =~ /3$/xsm ? 'rd' : 'th'
+		)
+	) . " frame";
+}
+
+opendir DFH, q{.};
+my $files = [
+	sort 
+	grep {
+		/temp_(?:0*)(\d+).gif/xsm &&
+		($1 % $use_every) == 0 # get every N'th frame
+	}
+	grep { 
+		/temp_(?:0*)(\d+).gif/xsm &&
+		$1 >= $from_frame && # only grab frames
+		$1 <= $to_frame      # in the desired range
+	}
+	readdir DFH
+];
+closedir DFH;
+
+if ($new_width) {
+	my $resizer = "$new_width";
+	my $disp_resizer = "$new_width";
+	if ($new_height) {
+		$resizer .= "x$new_height";
+		$disp_resizer .= "x$new_height";
+	} else {
+		$disp_resizer .= 'x?';
+	}
+	my $resize_command = "mogrify -resize $resizer " . join(' ', @$files);
+	say STDERR " * Resizing frames to $disp_resizer...";
+	`$resize_command`;
+}
+
+my $new_gif_command = "convert -coalesce -loop 0 -delay $fps " . join(' ', @$files) . " $output_file";
+say STDERR " * Assembling new animated GIF...";
+my $resp = `$new_gif_command`;
+
+my $out_stat = file_stat($output_file);
+
+say STDERR " * Cleaning up work files...";
+`rm temp_*.gif`;
+
+my $disp_inp_size = format_bytes($inp_stat->{size});
+my $disp_out_size = format_bytes($out_stat->{size});
+
+my $bytes_smaller = $inp_stat->{size} - $out_stat->{size};
+my $disp_bytes_smaller = format_bytes($bytes_smaller);
+
+my $percentage_change = ($bytes_smaller / $inp_stat->{size}) * 100;
+my $disp_percentage_change = sprintf('%0.2d', $percentage_change);
+
+my $disp_inp_dimensions = $inp_stat->{width} . 'x' . $inp_stat->{height};
+my $disp_out_dimensions = $out_stat->{width} . 'x' . $out_stat->{height};
+my $disp_inp_frames = $inp_stat->{frames};
+my $disp_out_frames = $out_stat->{frames};
+
+say STDERR <<__INFO;
+ * Done!
+
+	Input:
+	* $disp_inp_size
+	* $disp_inp_dimensions
+	* $disp_inp_frames frames
+
+	Output:
+	* $disp_out_size
+	* $disp_out_dimensions
+	* $disp_out_frames frames
+
+	Delta:
+	* $disp_bytes_smaller smaller
+	* $disp_percentage_change\% smaller
+__INFO
+
