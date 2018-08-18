@@ -1,5 +1,5 @@
 #!/usr/bin/env perl
-package App::animate_gif_shrinker;
+package App::animated_gif_shrinker;
 
 # Animated GIF Shrinker
 
