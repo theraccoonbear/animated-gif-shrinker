@@ -33,7 +33,7 @@ usage: ags -i <input> [-o <output>] [-w <width>] [-f <fps>] [--from <from-frame>
 
 ## Example
 
-Let's say we have this great GIF of Andre the Giant declining his opponents' offers to suplex him.
+Let's say we have this great GIF of [Andre the Giant](https://en.wikipedia.org/wiki/Andr%C3%A9_the_Giant) declining his opponents' offers to suplex him.
 
 ![Andre Says No](example/andre.gif?raw=true "andre.gif : Andre Says 'No'")
 
