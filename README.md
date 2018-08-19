@@ -43,9 +43,9 @@ Slack restricts custom image emoji to <= 64KB and <= 128 pixels width.
 
 Let's see what we can do.  By default we can just drop every other frame and resize to the maximum supported width.
 
-`$ ags --input andre.gif --width 128`
-
 ```
+$ ags --input andre.gif --width 128`
+
  * Getting stats for andre.gif
  * Extracting frames...
  * Then using every 2nd frame
@@ -75,9 +75,10 @@ Let's see what we can do.  By default we can just drop every other frame and res
 
 Almost a 75% reduction, but we're still too big in terms of file size.  Let's try resizing some more since as responses to messages emoji appear much smaller than their maximum size.
 
-`$ ags --input andre.gif --width 64`
 
 ```
+$ ags --input andre.gif --width 64`
+
  * Getting stats for andre.gif
  * Extracting frames...
  * Then using every 2nd frame
@@ -104,11 +105,11 @@ Almost a 75% reduction, but we're still too big in terms of file size.  Let's tr
    * 90% smaller
 ```
  
-Great!  We made it 90% smaller, but we're still to large a file for Slack.  There's several shots spliced together here, let's get the best Andre reaction (I opened the GIF in [The GIMP](https://www.gimp.org/) to preview the frames.  You can also just experiment based on the reported frame count):
-
-`$ ags --input andre.gif --width 64 --from 39 --to 67`
+Great!  We made it 90% smaller, but we've still got too large a file for Slack.  There's several shots spliced together here, so let's get the best Andre reaction (I opened the GIF in [The GIMP](https://www.gimp.org/) to preview the frames.  You can also just experiment based on the reported frame count):
 
 ```
+$ ags --input andre.gif --width 64 --from 39 --to 67`
+
  * Getting stats for andre.gif
  * Extracting frames...
  * Then grabbing frames 39 to 67 of input's 1 to 107...
@@ -135,15 +136,16 @@ Great!  We made it 90% smaller, but we're still to large a file for Slack.  Ther
    * 1.9MB smaller
    * 97% smaller
 ```
-
-Excellent!  By cutting out extra frames and focusing on the best action, we're able to squeeze another 7% out and get our file size down to well under the 64KB maximum slack imposes, but the clip looks too slow now.
 
 ![Andre Says No](example/andre_output_slow.gif?raw=true "andre.gif : Andre Says 'No'")
 
-One more tweak and we should have this nailed...
+Excellent!  By cutting out extra frames and focusing on the best action, we're able to squeeze another 7% out and get our file size down to well under the 64KB maximum slack imposes, but the clip looks too slow now.
 
-`$ ags --input andre.gif --width 64 --from 39 --to 67 --fps 8`
+One more tweak to the frame rate and we should have this nailed...
+
 ```
+$ ags --input andre.gif --width 64 --from 39 --to 67 --fps 8`
+
  * Getting stats for andre.gif
  * Extracting frames...
  * Then grabbing frames 39 to 67 of input's 1 to 107...
@@ -171,8 +173,8 @@ One more tweak and we should have this nailed...
    * 97% smaller
 ```
 
-Awesome, this is exactly what we need!
-
 ![Andre Says No](example/andre_output.gif?raw=true "andre.gif : Andre Says 'No'")
+
+Awesome, this is exactly what we need!
 
 ![Andre No Emoji Slack](example/andre_emoji_slack.png?raw=true "andre_emoji.png : Andre No Emoji Slack")
