@@ -19,108 +19,108 @@ my $fps = 10;
 
 # CLI opts, suitable for use by Getopt::Long
 my @opts = (
-	'input|i=s' => \$input_file,
-	'output|o=s' => \$output_file,
-	'use-every|u=i' => \$use_every,
-	'width|w=i' => \$new_width,
-	'height|h=i' => \$new_height,
-	'fps|f=i' => \$fps,
-	'from=i' => \$from_frame,
-	'to=i' => \$to_frame,
+  'input|i=s' => \$input_file,
+  'output|o=s' => \$output_file,
+  'use-every|u=i' => \$use_every,
+  'width|w=i' => \$new_width,
+  'height|h=i' => \$new_height,
+  'fps|f=i' => \$fps,
+  'from=i' => \$from_frame,
+  'to=i' => \$to_frame,
 );
 
 # CLI usage help to cross-link with @opts
 my $help = {
-	input => 'path to .gif for processing',
-	output => 'path to output new gif (default: <input>_output.gif)',
-	from => 'first frame to use',
-	to => 'last frame to use',
-	'use-every' => 'use every nth frame (default: 2)',
-	fps => 'set the output frame rate (default: 10)',
-	width => 'new width for image (default: input width)',
-	height => 'new height for image (default: scaled based on --width)',
+  input => 'path to .gif for processing',
+  output => 'path to output new gif (default: <input>_output.gif)',
+  from => 'first frame to use',
+  to => 'last frame to use',
+  'use-every' => 'use every nth frame (default: 2)',
+  fps => 'set the output frame rate (default: 10)',
+  width => 'new width for image (default: input width)',
+  height => 'new height for image (default: scaled based on --width)',
 };
 
 # Some helper functions
 
 sub show_usage {
-	my ($msg, $exit_code) = @_;
-	say STDERR "usage: ags <input> [-o <output>] [-w <width>] [-f <fps>] [--from <from-frame>] [--to <to-frame>]";
-	my $idx = 0;
-	foreach my $k ( @opts) {
-		# it's ostensibly a hash, but if we treat it
-		# as an array skipping even elements, we can
-		# preserve the key order as defined
-		if (++$idx % 2 == 0) { next; }
-		# parse the Getopt::Long syntax, naively
-		my ($flags, $type) = split(/=/, $k);
-		my @all_flags = split(/\|/, $flags);
-		my $cnt = 0;
-		foreach my $f (@all_flags) {
-			$cnt++;
-			my $disp_f = sprintf('%-15s', length($f) > 1 ? "--$f" : "-$f");
-			print STDERR "    $disp_f";
-			# we define our long flag first and key our
-			# help docs off of that
-			if ($cnt == 1 && defined $help->{$f}) {
-				print STDERR $help->{$f};
-			}
-			print STDERR "\n";
-		}
-		print STDERR "\n";
-	}
+  my ($msg, $exit_code) = @_;
+  say STDERR "usage: ags <input> [-o <output>] [-w <width>] [-f <fps>] [--from <from-frame>] [--to <to-frame>]";
+  my $idx = 0;
+  foreach my $k ( @opts) {
+    # it's ostensibly a hash, but if we treat it
+    # as an array skipping even elements, we can
+    # preserve the key order as defined
+    if (++$idx % 2 == 0) { next; }
+    # parse the Getopt::Long syntax, naively
+    my ($flags, $type) = split(/=/, $k);
+    my @all_flags = split(/\|/, $flags);
+    my $cnt = 0;
+    foreach my $f (@all_flags) {
+      $cnt++;
+      my $disp_f = sprintf('%-15s', length($f) > 1 ? "--$f" : "-$f");
+      print STDERR "    $disp_f";
+      # we define our long flag first and key our
+      # help docs off of that
+      if ($cnt == 1 && defined $help->{$f}) {
+        print STDERR $help->{$f};
+      }
+      print STDERR "\n";
+    }
+    print STDERR "\n";
+  }
 
     if ($exit_code) { 
-		print STDERR $msg . "\n";
-		exit $exit_code;
-	}
+    print STDERR $msg . "\n";
+    exit $exit_code;
+  }
 
 }
 
 sub file_stat {
-	my ($filename) = @_;
-	my ($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size, $atime,$mtime,$ctime,$blksize,$blocks) = stat($filename);
+  my ($filename) = @_;
+  my ($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size, $atime,$mtime,$ctime,$blksize,$blocks) = stat($filename);
 
-	say STDERR " * Getting stats for $filename";
+  say STDERR " * Getting stats for $filename";
 
-	my $info = {
-		dev => $dev,
-		ino => $ino,
-		mode => $mode,
-		nlink => $nlink,
-		uid => $uid,
-		gid => $gid,
-		rdev => $rdev,
-		size => $size,
-		atime => $atime,
-		mtime => $mtime,
-		ctime => $ctime,
-		blksize => $blksize,
-		blocks => $blocks
-	};
+  my $info = {
+    dev => $dev,
+    ino => $ino,
+    mode => $mode,
+    nlink => $nlink,
+    uid => $uid,
+    gid => $gid,
+    rdev => $rdev,
+    size => $size,
+    atime => $atime,
+    mtime => $mtime,
+    ctime => $ctime,
+    blksize => $blksize,
+    blocks => $blocks
+  };
 
-	# check if it's an image and include some metadata
-	if ($filename =~ m/\.(jpe?g|gif|png)$/xism) {
-		my $ident_cmd = "identify $filename";
-		my $result = `$ident_cmd 2>&1`;
-		if ($result =~ m/(?<width>\d+)x(?<height>\d+)/xsm) {
-			$info->{width} = $+{width};
-			$info->{height} = $+{height};
-		}
-		$info->{frames} = () = $result =~ /\[\d+\]/gi;
-	}
+  # check if it's an image and include some metadata
+  if ($filename =~ m/\.(jpe?g|gif|png)$/xism) {
+    my $ident_cmd = "identify $filename";
+    my $result = `$ident_cmd 2>&1`;
+    if ($result =~ m/(?<width>\d+)x(?<height>\d+)/xsm) {
+      $info->{width} = $+{width};
+      $info->{height} = $+{height};
+    }
+    $info->{frames} = () = $result =~ /\[\d+\]/gi;
+  }
 
-	return $info;
+  return $info;
 }
 
 # So we don't need to rely on an extra module
 sub format_bytes {
-	my ($bytes) = @_;
-	if ($bytes >= 1_000_000_000_000) { return sprintf('%.01f', $bytes / 1_000_000_000_000) . 'TB'; }
-	elsif ($bytes >= 1_000_000_000) { return sprintf('%.01f', $bytes / 1_000_000_000) . 'GB'; }
-	elsif ($bytes >= 1_000_000) { return sprintf('%.01f', $bytes / 1_000_000) . 'MB'; }
-	elsif ($bytes >= 1_000) { return sprintf('%.01f', $bytes / 1_000) . 'KB'; }
-	else { return $bytes . 'B'; }
+  my ($bytes) = @_;
+  if ($bytes >= 1_000_000_000_000) { return sprintf('%.01f', $bytes / 1_000_000_000_000) . 'TB'; }
+  elsif ($bytes >= 1_000_000_000) { return sprintf('%.01f', $bytes / 1_000_000_000) . 'GB'; }
+  elsif ($bytes >= 1_000_000) { return sprintf('%.01f', $bytes / 1_000_000) . 'MB'; }
+  elsif ($bytes >= 1_000) { return sprintf('%.01f', $bytes / 1_000) . 'KB'; }
+  else { return $bytes . 'B'; }
 }
 
 # Handle CLI args
@@ -128,15 +128,15 @@ sub format_bytes {
 GetOptions (@opts);
 
 if (! defined $input_file) {
-	show_usage "ERROR: Please specify an --input file for processing", 1;
+  show_usage "ERROR: Please specify an --input file for processing", 1;
 }
 
 if (! -f $input_file) {
-	show_usage "ERROR: Can't find \"$input_file\" for processing", 1;
+  show_usage "ERROR: Can't find \"$input_file\" for processing", 1;
 }
 
 if (!$output_file) {
-	($output_file = $input_file) =~ s/\.gif/_output.gif/xsm;
+  ($output_file = $input_file) =~ s/\.gif/_output.gif/xsm;
 }
 
 # get info on our input file
@@ -146,25 +146,25 @@ if (! defined $from_frame) { $from_frame = 1; }
 if (! defined $to_frame) { $to_frame = $inp_stat->{frames}; }
 
 if ($to_frame < $from_frame) {
-	show_usage "ERROR: --from cannot be after --to", 1;
+  show_usage "ERROR: --from cannot be after --to", 1;
 }
 
 if ($from_frame > $inp_stat->{frames} || $to_frame > $inp_stat->{frames}) {
-	show_usage "ERROR: --from and --to must be in the range of 1 to " . $inp_stat->{frames}, 1;
+  show_usage "ERROR: --from and --to must be in the range of 1 to " . $inp_stat->{frames}, 1;
 }
 
 if ($from_frame != 1 || $to_frame != $inp_stat->{frames}) {
-	say STDERR " * Then grabbing frames $from_frame to $to_frame of input's 1 to " . $inp_stat->{frames} . "...";
+  say STDERR " * Then grabbing frames $from_frame to $to_frame of input's 1 to " . $inp_stat->{frames} . "...";
 }
 
 
 if ($use_every != 1) {
-	# proper ordinal suffix
-	say STDERR " * Then using every $use_every" . (
-		$use_every =~ /2$/xsm ? 'nd' : (
-			$use_every =~ /3$/xsm ? 'rd' : 'th'
-		)
-	) . " frame";
+  # proper ordinal suffix
+  say STDERR " * Then using every $use_every" . (
+    $use_every =~ /2$/xsm ? 'nd' : (
+      $use_every =~ /3$/xsm ? 'rd' : 'th'
+    )
+  ) . " frame";
 }
 
 # Start of image processing
@@ -177,17 +177,17 @@ opendir DFH, q{.};
 
 # read the files and...
 my $files = [
-	sort 
-	grep {
-		/temp_(?:0*)(\d+).gif/xsm &&
-		($1 % $use_every) == 0 # SECOND: ...get every N'th frame
-	}
-	grep { 
-		/temp_(?:0*)(\d+).gif/xsm &&
-		$1 >= $from_frame && # FIRST: ...only grab frames
-		$1 <= $to_frame      # in the desired range
-	}
-	readdir DFH
+  sort 
+  grep {
+    /temp_(?:0*)(\d+).gif/xsm &&
+    ($1 % $use_every) == 0 # SECOND: ...get every N'th frame
+  }
+  grep { 
+    /temp_(?:0*)(\d+).gif/xsm &&
+    $1 >= $from_frame && # FIRST: ...only grab frames
+    $1 <= $to_frame      # in the desired range
+  }
+  readdir DFH
 ];
 closedir DFH;
 
@@ -196,17 +196,17 @@ closedir DFH;
 #       height can be forced to override the
 #       preservation of aspect ratio
 if ($new_width) {
-	my $resizer = "$new_width";
-	my $disp_resizer = "$new_width";
-	if ($new_height) {
-		$resizer .= "x$new_height";
-		$disp_resizer .= "x$new_height";
-	} else {
-		$disp_resizer .= 'x?';
-	}
-	my $resize_command = "mogrify -resize $resizer " . join(' ', @$files);
-	say STDERR " * Resizing frames to $disp_resizer...";
-	`$resize_command`;
+  my $resizer = "$new_width";
+  my $disp_resizer = "$new_width";
+  if ($new_height) {
+    $resizer .= "x$new_height";
+    $disp_resizer .= "x$new_height";
+  } else {
+    $disp_resizer .= 'x?';
+  }
+  my $resize_command = "mogrify -resize $resizer " . join(' ', @$files);
+  say STDERR " * Resizing frames to $disp_resizer...";
+  `$resize_command`;
 }
 
 # Stitch our modified frames back into an animate GIF
