@@ -73,7 +73,7 @@ $ ags --input andre.gif --width 128
 
 ```
 
-Almost a 75% reduction, but we're still too big in terms of file size.  Let's try resizing some more since as responses to messages emoji appear much smaller than their maximum size.
+Almost a 75% reduction, but we're still too big in terms of file size.  Let's try resizing some more.  When used as responses to messages on Slack, emoji appear smaller than the maximum size.
 
 
 ```
@@ -105,7 +105,7 @@ $ ags --input andre.gif --width 64
    * 90% smaller
 ```
  
-Great!  We made it 90% smaller, but we've still got too large a file for Slack.  There's several shots spliced together here, so let's get the best Andre reaction (I opened the GIF in [The GIMP](https://www.gimp.org/) to preview the frames.  You can also just experiment based on the reported frame count):
+Great!  We made it 90% smaller, but we've still got too large a file for Slack.  In the GIF there's several shots spliced together, so let's focus and get the best Andre reaction (I opened the GIF in [The GIMP](https://www.gimp.org/) to preview the frames.  You can also just experiment based on the reported frame count):
 
 ```
 $ ags --input andre.gif --width 64 --from 39 --to 67
@@ -139,7 +139,7 @@ $ ags --input andre.gif --width 64 --from 39 --to 67
 
 ![Andre Says No](example/andre_output_slow.gif?raw=true "andre.gif : Andre Says 'No'")
 
-Excellent!  By cutting out extra frames and focusing on the best action, we're able to squeeze another 7% out and get our file size down to well under the 64KB maximum slack imposes, but the clip looks too slow now.
+Excellent!  By cutting out extra frames and focusing on the best action, we're able to squeeze another 7% out and get our file size down to well under the 64KB maximum Slack imposes, but now the clip looks too slow.
 
 One more tweak to the frame rate and we should have this nailed...
 
