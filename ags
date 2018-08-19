@@ -33,8 +33,8 @@ my $help = {
 	output => 'path to output new gif (default: <input>_output.gif)',
 	from => 'first frame to use',
 	to => 'last frame to use',
-	'use-every' => 'use every _n_th frame',
-	fps => 'set the output frame rate',
+	'use-every' => 'use every nth frame (default: 2)',
+	fps => 'set the output frame rate (default: 10)',
 	width => 'new width for image (default: input width)',
 	height => 'new height for image (default: scaled based on --width)',
 };
@@ -42,7 +42,7 @@ my $help = {
 
 sub show_usage {
 	my ($msg, $exit_code) = @_;
-	say STDERR "usage: ags [-i <input>] [-o <output>]";
+	say STDERR "usage: ags <input> [-o <output>] [-w <width>] [-f <fps>] [--from <from-frame>] [--to <to-frame>]";
 	my $idx = 0;
 	foreach my $k ( @opts) {
 		if (++$idx % 2 == 0) { next; }
@@ -133,7 +133,7 @@ say STDERR " * Extracting frames...";
 `$frame_split_command`;
 
 if (! defined $from_frame) { $from_frame = 1; }
-if (! defined $to_frame) { $from_frame = $inp_stat->{frames}; }
+if (! defined $to_frame) { $to_frame = $inp_stat->{frames}; }
 
 if ($to_frame < $from_frame) {
 	show_usage "ERROR: --from cannot be after --to", 1;
@@ -211,18 +211,20 @@ my $disp_out_frames = $out_stat->{frames};
 say STDERR <<__INFO;
  * Done!
 
-	Input:
-	* $disp_inp_size
-	* $disp_inp_dimensions
-	* $disp_inp_frames frames
+ Input:
+   * $input_file
+   * $disp_inp_size
+   * $disp_inp_dimensions
+   * $disp_inp_frames frames
 
-	Output:
-	* $disp_out_size
-	* $disp_out_dimensions
-	* $disp_out_frames frames
+ Output:
+   * $output_file
+   * $disp_out_size
+   * $disp_out_dimensions
+   * $disp_out_frames frames
 
-	Delta:
-	* $disp_bytes_smaller smaller
-	* $disp_percentage_change\% smaller
+ Delta:
+   * $disp_bytes_smaller smaller
+   * $disp_percentage_change\% smaller
 __INFO
 
