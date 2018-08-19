@@ -43,7 +43,7 @@ Slack restricts custom image emoji to <= 64KB and <= 128 pixels width.
 
 Let's see what we can do.  By default we can just drop every other frame and resize to the maximum supported width.
 
-`$ acs --input andre.gif --width 128`
+`$ ags --input andre.gif --width 128`
 
 ```
  * Getting stats for andre.gif
@@ -75,7 +75,7 @@ Let's see what we can do.  By default we can just drop every other frame and res
 
 Almost a 75% reduction, but we're still too big in terms of file size.  Let's try resizing some more since as responses to messages emoji appear much smaller than their maximum size.
 
-`$ acs --input andre.gif --width 64`
+`$ ags --input andre.gif --width 64`
 
 ```
  * Getting stats for andre.gif
@@ -106,7 +106,7 @@ Almost a 75% reduction, but we're still too big in terms of file size.  Let's tr
  
 Great!  We made it 90% smaller, but we're still to large a file for Slack.  There's several shots spliced together here, let's get the best Andre reaction (I opened the GIF in [The GIMP](https://www.gimp.org/) to preview the frames.  You can also just experiment based on the reported frame count):
 
-`$ acs --input andre.gif --width 64 --from 39 --to 68`
+`$ ags --input andre.gif --width 64 --from 39 --to 68`
 
 ```
  * Getting stats for andre.gif
@@ -142,7 +142,7 @@ Excellent!  By cutting out extra frames and focusing on the best action, we're a
 
 One more tweak and we should have this nailed...
 
-`$ acs --input andre.gif --width 64 --from 39 --to 68 --fps 8`
+`$ ags --input andre.gif --width 64 --from 39 --to 68 --fps 8`
 ``` * Getting stats for andre.gif
  * Extracting frames...
  * Then grabbing frames 39 to 68 of input's 1 to 107...
