@@ -41,7 +41,7 @@ This weighs in at ~2MB and is 255 pixels wide.
 
 Slack restricts custom image emoji to <= 64KB and <= 128 pixels width.
 
-Let's see what we can do.  Let's start with the default behavior of dropping every other frame and we'll resize to the maximum supported width in Slack (128px).
+Let's start with the default behavior of dropping every other frame and we'll resize to the maximum supported width in Slack (128px).
 
 ```
 $ ags --input andre.gif --width 128`
