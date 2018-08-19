@@ -106,12 +106,12 @@ Almost a 75% reduction, but we're still too big in terms of file size.  Let's tr
  
 Great!  We made it 90% smaller, but we're still to large a file for Slack.  There's several shots spliced together here, let's get the best Andre reaction (I opened the GIF in [The GIMP](https://www.gimp.org/) to preview the frames.  You can also just experiment based on the reported frame count):
 
-`$ ags --input andre.gif --width 64 --from 39 --to 68`
+`$ ags --input andre.gif --width 64 --from 39 --to 67`
 
 ```
  * Getting stats for andre.gif
  * Extracting frames...
- * Then grabbing frames 39 to 68 of input's 1 to 107...
+ * Then grabbing frames 39 to 67 of input's 1 to 107...
  * Then using every 2nd frame
  * Resizing frames to 64x?...
  * Assembling new animated GIF...
@@ -127,9 +127,9 @@ Great!  We made it 90% smaller, but we're still to large a file for Slack.  Ther
 
  Output:
    * andre_output.gif
-   * 58.6KB
+   * 54.7KB
    * 64x48
-   * 15 frames
+   * 14 frames
 
  Delta:
    * 1.9MB smaller
@@ -142,10 +142,11 @@ Excellent!  By cutting out extra frames and focusing on the best action, we're a
 
 One more tweak and we should have this nailed...
 
-`$ ags --input andre.gif --width 64 --from 39 --to 68 --fps 8`
-``` * Getting stats for andre.gif
+`$ ags --input andre.gif --width 64 --from 39 --to 67 --fps 8`
+```
+ * Getting stats for andre.gif
  * Extracting frames...
- * Then grabbing frames 39 to 68 of input's 1 to 107...
+ * Then grabbing frames 39 to 67 of input's 1 to 107...
  * Then using every 2nd frame
  * Resizing frames to 64x?...
  * Assembling new animated GIF...
@@ -161,9 +162,9 @@ One more tweak and we should have this nailed...
 
  Output:
    * andre_output.gif
-   * 58.6KB
+   * 54.7KB
    * 64x48
-   * 15 frames
+   * 14 frames
 
  Delta:
    * 1.9MB smaller
