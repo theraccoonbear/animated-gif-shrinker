@@ -17,6 +17,7 @@ my $from_frame;
 my $to_frame;
 my $fps = 10;
 
+# CLI opts, suitable for use by Getopt::Long
 my @opts = (
 	'input|i=s' => \$input_file,
 	'output|o=s' => \$output_file,
@@ -28,6 +29,7 @@ my @opts = (
 	'to=i' => \$to_frame,
 );
 
+# CLI usage help to cross-link with @opts
 my $help = {
 	input => 'path to .gif for processing',
 	output => 'path to output new gif (default: <input>_output.gif)',
@@ -39,13 +41,18 @@ my $help = {
 	height => 'new height for image (default: scaled based on --width)',
 };
 
+# Some helper functions
 
 sub show_usage {
 	my ($msg, $exit_code) = @_;
 	say STDERR "usage: ags <input> [-o <output>] [-w <width>] [-f <fps>] [--from <from-frame>] [--to <to-frame>]";
 	my $idx = 0;
 	foreach my $k ( @opts) {
+		# it's ostensibly a hash, but if we treat it
+		# as an array skipping even elements, we can
+		# preserve the key order as defined
 		if (++$idx % 2 == 0) { next; }
+		# parse the Getopt::Long syntax, naively
 		my ($flags, $type) = split(/=/, $k);
 		my @all_flags = split(/\|/, $flags);
 		my $cnt = 0;
@@ -53,6 +60,8 @@ sub show_usage {
 			$cnt++;
 			my $disp_f = sprintf('%-15s', length($f) > 1 ? "--$f" : "-$f");
 			print STDERR "    $disp_f";
+			# we define our long flag first and key our
+			# help docs off of that
 			if ($cnt == 1 && defined $help->{$f}) {
 				print STDERR $help->{$f};
 			}
@@ -90,6 +99,7 @@ sub file_stat {
 		blocks => $blocks
 	};
 
+	# check if it's an image and include some metadata
 	if ($filename =~ m/\.(jpe?g|gif|png)$/xism) {
 		my $ident_cmd = "identify $filename";
 		my $result = `$ident_cmd 2>&1`;
@@ -103,6 +113,7 @@ sub file_stat {
 	return $info;
 }
 
+# So we don't need to rely on an extra module
 sub format_bytes {
 	my ($bytes) = @_;
 	if ($bytes >= 1_000_000_000_000) { return sprintf('%.01f', $bytes / 1_000_000_000_000) . 'TB'; }
@@ -111,6 +122,8 @@ sub format_bytes {
 	elsif ($bytes >= 1_000) { return sprintf('%.01f', $bytes / 1_000) . 'KB'; }
 	else { return $bytes . 'B'; }
 }
+
+# Handle CLI args
 
 GetOptions (@opts);
 
@@ -126,11 +139,8 @@ if (!$output_file) {
 	($output_file = $input_file) =~ s/\.gif/_output.gif/xsm;
 }
 
+# get info on our input file
 my $inp_stat = file_stat($input_file);
-
-my $frame_split_command = "convert \"$input_file\" +adjoin temp_%04d.gif 2>&1";
-say STDERR " * Extracting frames...";
-`$frame_split_command`;
 
 if (! defined $from_frame) { $from_frame = 1; }
 if (! defined $to_frame) { $to_frame = $inp_stat->{frames}; }
@@ -147,7 +157,9 @@ if ($from_frame != 1 || $to_frame != $inp_stat->{frames}) {
 	say STDERR " * Then grabbing frames $from_frame to $to_frame of input's 1 to " . $inp_stat->{frames} . "...";
 }
 
+
 if ($use_every != 1) {
+	# proper ordinal suffix
 	say STDERR " * Then using every $use_every" . (
 		$use_every =~ /2$/xsm ? 'nd' : (
 			$use_every =~ /3$/xsm ? 'rd' : 'th'
@@ -155,22 +167,34 @@ if ($use_every != 1) {
 	) . " frame";
 }
 
+# Start of image processing
+
+my $frame_split_command = "convert \"$input_file\" +adjoin temp_%04d.gif 2>&1";
+say STDERR " * Extracting frames...";
+`$frame_split_command`;
+
 opendir DFH, q{.};
+
+# read the files and...
 my $files = [
 	sort 
 	grep {
 		/temp_(?:0*)(\d+).gif/xsm &&
-		($1 % $use_every) == 0 # get every N'th frame
+		($1 % $use_every) == 0 # SECOND: ...get every N'th frame
 	}
 	grep { 
 		/temp_(?:0*)(\d+).gif/xsm &&
-		$1 >= $from_frame && # only grab frames
+		$1 >= $from_frame && # FIRST: ...only grab frames
 		$1 <= $to_frame      # in the desired range
 	}
 	readdir DFH
 ];
 closedir DFH;
 
+# Resize, if applicable
+# note: only a new width will trigger a resize
+#       height can be forced to override the
+#       preservation of aspect ratio
 if ($new_width) {
 	my $resizer = "$new_width";
 	my $disp_resizer = "$new_width";
@@ -185,6 +209,7 @@ if ($new_width) {
 	`$resize_command`;
 }
 
+# Stitch our modified frames back into an animate GIF
 my $new_gif_command = "convert -coalesce -loop 0 -delay $fps " . join(' ', @$files) . " $output_file";
 say STDERR " * Assembling new animated GIF...";
 my $resp = `$new_gif_command`;
@@ -192,6 +217,7 @@ my $resp = `$new_gif_command`;
 my $out_stat = file_stat($output_file);
 
 say STDERR " * Cleaning up work files...";
+# remove the temporary frames
 `rm temp_*.gif`;
 
 my $disp_inp_size = format_bytes($inp_stat->{size});
