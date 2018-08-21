@@ -179,13 +179,15 @@ opendir DFH, q{.};
 my $files = [
   sort 
   grep {
-    /temp_(?:0*)(\d+).gif/xsm &&
-    ($1 % $use_every) == 0 # SECOND: ...get every N'th frame
+    $use_every == 1 || (
+      /temp_(?:0*)(\d+).gif/xsm &&
+      ($1 % $use_every) == 0 # SECOND: ...get every N'th frame
+    )
   }
   grep { 
     /temp_(?:0*)(\d+).gif/xsm &&
-    $1 >= $from_frame && # FIRST: ...only grab frames
-    $1 <= $to_frame      # in the desired range
+    $1 >= $from_frame - 1 && # FIRST: ...only grab frames
+    $1 <= $to_frame - 1      # in the desired range
   }
   readdir DFH
 ];
@@ -218,7 +220,7 @@ my $out_stat = file_stat($output_file);
 
 say STDERR " * Cleaning up work files...";
 # remove the temporary frames
-`rm temp_*.gif`;
+#`rm temp_*.gif`;
 
 my $disp_inp_size = format_bytes($inp_stat->{size});
 my $disp_out_size = format_bytes($out_stat->{size});
