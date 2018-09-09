@@ -7,7 +7,7 @@ A perl tool to help convert an animated GIF into a new image suitable for use as
 
 ## Basic Usage
 ```
-usage: ags -i <input> [-o <output>] [-w <width>] [-f <fps>] [--from <from-frame>] [--to <to-frame>]
+usage: ags -i <input> [-o <output>] [-w <width>] [-f <fps>] [--from <from-frame>] [--to <to-frame>] [-c <bounds>]
     --input        path to .gif for processing
     -i             
 
@@ -29,6 +29,9 @@ usage: ags -i <input> [-o <output>] [-w <width>] [-f <fps>] [--from <from-frame>
     --from         first frame to use
 
     --to           last frame to use
+
+    --crop          WxH+X+Y from X,Y grabbing WxH
+    -c             
 ```
 
 ## Example
