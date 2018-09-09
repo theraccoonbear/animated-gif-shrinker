@@ -16,6 +16,7 @@ my $new_height;
 my $from_frame;
 my $to_frame;
 my $fps = 10;
+my $crop;
 
 # CLI opts, suitable for use by Getopt::Long
 my @opts = (
@@ -27,6 +28,7 @@ my @opts = (
   'fps|f=i' => \$fps,
   'from=i' => \$from_frame,
   'to=i' => \$to_frame,
+  'crop|c=s' => \$crop
 );
 
 # CLI usage help to cross-link with @opts
@@ -39,6 +41,7 @@ my $help = {
   fps => 'set the output frame rate (default: 10)',
   width => 'new width for image (default: input width)',
   height => 'new height for image (default: scaled based on --width)',
+  crop => ' WxH+X+Y from X,Y grabbing WxH'
 };
 
 # Some helper functions
@@ -142,7 +145,7 @@ if (!$output_file) {
 # get info on our input file
 my $inp_stat = file_stat($input_file);
 
-if (! defined $from_frame) { $from_frame = 1; }
+if (! defined $from_frame) { $from_frame = 0; }
 if (! defined $to_frame) { $to_frame = $inp_stat->{frames}; }
 
 if ($to_frame < $from_frame) {
@@ -153,9 +156,17 @@ if ($from_frame > $inp_stat->{frames} || $to_frame > $inp_stat->{frames}) {
   show_usage "ERROR: --from and --to must be in the range of 1 to " . $inp_stat->{frames}, 1;
 }
 
+if ($crop) {
+ #-coalesce -repage 0x0 -crop WxH+X+Y +repage 
+  if ($crop !~ /\d+x\d+\+\d+\+\d+/) {
+    show_usage "Invalid crop: " . $crop, 1;
+  }
+}
+
 if ($from_frame != 1 || $to_frame != $inp_stat->{frames}) {
   say STDERR " * Then grabbing frames $from_frame to $to_frame of input's 1 to " . $inp_stat->{frames} . "...";
 }
+
 
 
 if ($use_every != 1) {
@@ -169,7 +180,7 @@ if ($use_every != 1) {
 
 # Start of image processing
 
-my $frame_split_command = "convert \"$input_file\" +adjoin temp_%04d.gif 2>&1";
+my $frame_split_command = "convert -coalesce \"$input_file\" +adjoin temp_%04d.gif 2>&1";
 say STDERR " * Extracting frames...";
 `$frame_split_command`;
 
@@ -209,10 +220,32 @@ if ($new_width) {
   my $resize_command = "mogrify -resize $resizer " . join(' ', @$files);
   say STDERR " * Resizing frames to $disp_resizer...";
   `$resize_command`;
+} elsif ($new_height) {
+  my $resizer = "x$new_height";
+  my $disp_resizer = "?x$new_height";
+  my $resize_command = "mogrify -resize $resizer " . join(' ', @$files);
+  say STDERR " * Resizing frames to $disp_resizer...";
+  `$resize_command`;
 }
 
+my @options = ();
+
+if ($crop) {
+  push @options, "-repage 0x0 -crop $crop +repage";
+}
+
+push @options, "-coalesce";
+push @options, "-loop 0";
+push @options, "-delay $fps";
+
+my $opt_string = join(' ', @options);
+
+my $new_gif_command = "convert $opt_string " . join(' ', @$files) . " $output_file";
+# print $a_new_gif_command;
+# exit 0;
+
 # Stitch our modified frames back into an animate GIF
-my $new_gif_command = "convert -coalesce -loop 0 -delay $fps " . join(' ', @$files) . " $output_file";
+#my $new_gif_command = "convert -coalesce -loop 0 -delay $fps " . join(' ', @$files) . " $output_file";
 say STDERR " * Assembling new animated GIF...";
 my $resp = `$new_gif_command`;
 
