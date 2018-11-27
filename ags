@@ -6,7 +6,7 @@ package App::animated_gif_shrinker;
 use strict;
 use warnings;
 use Getopt::Long;
-#use Data::Printer;
+use Data::Printer;
 
 my $input_file;
 my $output_file;
@@ -145,7 +145,7 @@ if (!$output_file) {
 # get info on our input file
 my $inp_stat = file_stat($input_file);
 
-if (! defined $from_frame) { $from_frame = 0; }
+if (! defined $from_frame) { $from_frame = 1 }
 if (! defined $to_frame) { $to_frame = $inp_stat->{frames}; }
 
 if ($to_frame < $from_frame) {
@@ -156,9 +156,18 @@ if ($from_frame > $inp_stat->{frames} || $to_frame > $inp_stat->{frames}) {
   show_usage "ERROR: --from and --to must be in the range of 1 to " . $inp_stat->{frames}, 1;
 }
 
+# @todo this is really not ideal.  what you want to do is nail down a crop and 
+# then resize that target.  Right now we resize then crop.  We should do it the other
+# way to be sensible
 if ($crop) {
- #-coalesce -repage 0x0 -crop WxH+X+Y +repage 
-  if ($crop !~ /\d+x\d+\+\d+\+\d+/) {
+  if ($crop =~ /(?<crop_x_offset>\d+)x(?<crop_y_offset>\d+)\+?(?<crop_width>-?\d+)\+?(?<crop_height>-?\d+)/) {
+    if (
+      $+{crop_x_offset} + $+{crop_width} > $inp_stat->{width} ||
+      $+{crop_y_offset} + $+{crop_height} > $inp_stat->{height}
+    ) {
+      show_usage "Resizing is performed BEFORE cropping.  Your crop what fall outside of the resized image's bounds";
+    }
+  } else {
     show_usage "Invalid crop: " . $crop, 1;
   }
 }
@@ -241,11 +250,10 @@ push @options, "-delay $fps";
 my $opt_string = join(' ', @options);
 
 my $new_gif_command = "convert $opt_string " . join(' ', @$files) . " $output_file";
-# print $a_new_gif_command;
+# print $new_gif_command;
 # exit 0;
 
 # Stitch our modified frames back into an animate GIF
-#my $new_gif_command = "convert -coalesce -loop 0 -delay $fps " . join(' ', @$files) . " $output_file";
 say STDERR " * Assembling new animated GIF...";
 my $resp = `$new_gif_command`;
 
@@ -253,7 +261,7 @@ my $out_stat = file_stat($output_file);
 
 say STDERR " * Cleaning up work files...";
 # remove the temporary frames
-#`rm temp_*.gif`;
+`rm temp_*.gif`;
 
 my $disp_inp_size = format_bytes($inp_stat->{size});
 my $disp_out_size = format_bytes($out_stat->{size});
